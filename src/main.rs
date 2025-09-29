@@ -8,6 +8,8 @@
 
 use core::panic::PanicInfo;
 
+use crate::vga_buffer::WRITER;
+
 mod serial;
 mod vga_buffer;
 
@@ -45,11 +47,6 @@ pub fn test_runner(tests: &[&dyn Testable]) {
     }
 
     exit_qemu(QemuExitCode::Success);
-}
-
-#[test_case]
-fn trivial_assertion() {
-    assert_eq!(1, 1);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
