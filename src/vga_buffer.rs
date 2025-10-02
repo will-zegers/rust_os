@@ -1,3 +1,9 @@
+use core::fmt::{Arguments, Result, Write};
+use lazy_static::lazy_static;
+use spin::Mutex;
+use volatile::Volatile;
+use x86_64::instructions::interrupts;
+
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -36,8 +42,6 @@ struct ScreenChar {
     ascii_character: u8,
     color_code: ColorCode,
 }
-
-use volatile::Volatile;
 
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
@@ -108,17 +112,12 @@ impl Writer {
     }
 }
 
-use core::fmt;
-
-impl fmt::Write for Writer {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
+impl Write for Writer {
+    fn write_str(&mut self, s: &str) -> Result {
         self.write_string(s);
         Ok(())
     }
 }
-
-use lazy_static::lazy_static;
-use spin::Mutex;
 
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
@@ -140,10 +139,7 @@ macro_rules! print {
 }
 
 #[doc(hidden)]
-pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
-    use x86_64::instructions::interrupts;
-
+pub fn _print(args: Arguments) {
     interrupts::without_interrupts(|| {
         WRITER.lock().write_fmt(args).unwrap();
     });
@@ -163,9 +159,6 @@ fn test_println_many() {
 
 #[test_case]
 fn test_println_output() {
-    use fmt::Write;
-    use x86_64::instructions::interrupts;
-
     let s = "Some test string that fits on a single line";
     interrupts::without_interrupts(|| {
         let mut writer = WRITER.lock();

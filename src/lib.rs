@@ -5,8 +5,8 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-
 use x86_64::instructions;
+use x86_64::instructions::port::Port;
 
 pub mod gdt;
 pub mod interrupts;
@@ -19,6 +19,26 @@ pub extern "C" fn _start() -> ! {
     init();
     test_main();
     hlt_loop();
+}
+
+pub fn exit_qemu(exit_code: QemuExitCode) {
+    unsafe {
+        let mut port = Port::new(0xf4);
+        port.write(exit_code as u32);
+    }
+}
+
+pub fn init() {
+    gdt::init();
+    interrupts::init_idt();
+    unsafe { interrupts::PICS.lock().initialize() };
+    x86_64::instructions::interrupts::enable();
+}
+
+pub fn hlt_loop() -> ! {
+    loop {
+        instructions::hlt();
+    }
 }
 
 pub trait Testable {
@@ -63,26 +83,4 @@ fn panic(info: &PanicInfo) -> ! {
 pub enum QemuExitCode {
     Success = 0x10,
     Failed = 0x11,
-}
-
-pub fn exit_qemu(exit_code: QemuExitCode) {
-    use x86_64::instructions::port::Port;
-
-    unsafe {
-        let mut port = Port::new(0xf4);
-        port.write(exit_code as u32);
-    }
-}
-
-pub fn init() {
-    gdt::init();
-    interrupts::init_idt();
-    unsafe { interrupts::PICS.lock().initialize() };
-    x86_64::instructions::interrupts::enable();
-}
-
-pub fn hlt_loop() -> ! {
-    loop {
-        instructions::hlt();
-    }
 }
