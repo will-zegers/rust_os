@@ -11,6 +11,9 @@ use x86_64::instructions::port::Port;
 #[cfg(test)]
 use bootloader::{BootInfo, entry_point};
 
+extern crate alloc;
+
+pub mod allocator;
 pub mod gdt;
 pub mod interrupts;
 pub mod memory;
