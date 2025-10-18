@@ -60,7 +60,7 @@ fn many_boxes() {
     }
 }
 
-/// Stress test the bump allocator
+/// Show `LinkedListAllocator` succeeds where `BumpAllocator` failed
 #[test_case]
 #[should_panic]
 fn many_boxes_long_lived() {
